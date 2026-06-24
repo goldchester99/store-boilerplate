@@ -21,6 +21,10 @@ const BLOCKED_PATTERNS = [
   /\[[0-9a-fA-F:]*:[0-9a-fA-F:]*\]/,
   // Connection string dengan kredensial: scheme://user:pass@host
   /[a-z][a-z0-9+.-]*:\/\/[^\s/@]+:[^\s/@]+@/i,
+  // URL dengan path component — expose endpoint internal atau filesystem
+  // Menangkap: file:///etc/passwd, ftp://host/file, http://internal/api/data
+  // Tidak menangkap: https://example.com (tanpa path — false-positive risk)
+  /[a-z][a-z0-9+.-]*:\/\/[^\s@/]*\/\S*/i,
   // SQL: pola spesifik query nyata supaya tidak false-positive pada kalimat
   // Inggris biasa ("SELECT an option from the list", "Please UPDATE your
   // profile", "DELETE this item?" tidak diblok).

@@ -4,11 +4,11 @@ import { registerStore } from './storeRegistry.js';
 import { validateStorageData } from '../security/storageValidator.js';
 import { PERSIST_BLOCKED_FIELDS, SENSITIVE_FIELDS } from '../security/sensitiveFields.js';
 import { stripSensitiveDeep } from '../security/deepSanitize.js';
-
-const SENSITIVE_SET = new Set(SENSITIVE_FIELDS);
 import { devtoolsMiddleware } from '../middleware/devtools.js';
 import { loggerMiddleware } from '../middleware/logger.js';
 import { immerMiddleware } from '../middleware/immer.js';
+
+const SENSITIVE_SET = new Set(SENSITIVE_FIELDS);
 
 export const STORAGE_PREFIX = 'store-boilerplate:';
 
@@ -21,7 +21,7 @@ const isDev = () =>
  * Store yang otomatis sync ke localStorage (atau sessionStorage).
  * Fitur: field whitelist, isHydrated flag, validasi storage, migration.
  *
- * Dibangun di atas custom engine (useSyncExternalStore) — tidak bergantung Zustand.
+ * Dibangun di atas custom engine (useSyncExternalStore) — zero external dependency.
  *
  * @param {string} name - nama store + storage key prefix
  * @param {object} options

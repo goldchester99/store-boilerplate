@@ -7,8 +7,8 @@ const isDev = () =>
     : true;
 
 /**
- * Devtools middleware — integrasikan Redux DevTools Extension langsung,
- * tanpa bergantung pada Zustand. Field sensitif di-mask sebelum dikirim.
+ * Devtools middleware — integrasikan Redux DevTools Extension langsung.
+ * Field sensitif di-mask sebelum dikirim.
  * Auto nonaktif di production.
  *
  * Interface baru: (setState, getState, config) => wrappedSetState

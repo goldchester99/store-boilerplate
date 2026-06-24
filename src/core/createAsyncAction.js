@@ -4,7 +4,7 @@ import { sanitizeError } from '../security/errorSanitizer.js';
  * Wrapper untuk async action dengan auto loading/error state
  * dan race condition guard — hanya call terakhir yang update state.
  *
- * @param {function} set - Zustand set function dari store
+ * @param {function} set - setState dari store (dari createStore / createPersistentStore)
  * @param {function} asyncFn - async function yang akan dieksekusi
  * @returns {function} wrapped async function
  *

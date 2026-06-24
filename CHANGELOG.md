@@ -5,7 +5,13 @@ Versioning menggunakan [SemVer](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [1.0.1] — 2026-06-24
+
+### Changed
+- **`templates/auth.store.js` — implementasi nyata, tanpa placeholder.** Template diganti dari `createPersistentStore` ke `createStore` (zero persistence untuk auth state). `fetchToken()` placeholder dihapus, diganti fetch langsung ke `/api/auth/login`. `refreshToken` diubah dari sync setter ke async action yang fetch `/api/auth/refresh` via httpOnly cookie. `logout` kini memanggil `/api/auth/logout` di server sebelum `clearSensitiveData()`, dengan `try/finally` untuk memastikan state lokal selalu bersih meskipun API call gagal. Field `token` di-rename ke `accessToken`. `user` object dari API di-sanitasi via `sanitizeObject()` sebelum masuk state.
+
+### Security
+- **`templates/auth.store.js` — zero auth state di localStorage.** Tidak ada `user`, `accessToken`, maupun `isAuthenticated` yang tersimpan di storage. Attack surface di localStorage untuk auth = nol. Session di-restore eksklusif via httpOnly cookie (`/api/auth/refresh`).
 
 ### Security
 - **Sisi-tulis persistence kini deep-scan field sensitif (B-11/B-11b).** `saveToStorage` men-strip 6 field sensitif (`token`, `accessToken`, `refreshToken`, `password`, `secret`, `otp`) di SEMUA level sebelum menulis ke storage — token/password bersarang (mis. `user.token`) tidak pernah menyentuh disk. Sebelumnya sisi-tulis hanya memblokir 3 jenis token di level atas.

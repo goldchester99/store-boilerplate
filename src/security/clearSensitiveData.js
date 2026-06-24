@@ -1,6 +1,5 @@
 import { getAllStores } from '../core/storeRegistry.js';
-
-const STORAGE_PREFIX = 'store-boilerplate:';
+import { STORAGE_PREFIX } from '../core/createPersistentStore.js';
 
 /**
  * Wipe semua data sensitif — reset semua store + hapus semua key

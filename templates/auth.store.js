@@ -1,68 +1,112 @@
 /**
  * Template: Auth Store
  *
- * ⚠️ TOKEN DISIMPAN DI MEMORY ONLY — tidak boleh masuk persistFields.
- * Ini disengaja untuk mencegah token exposure via localStorage (XSS risk).
+ * Tidak ada auth state yang di-persist ke localStorage.
+ * Session di-restore via refresh token (httpOnly cookie) setiap kali app load.
+ *
+ * ⚠️ accessToken disimpan di MEMORY ONLY — hilang saat tab/browser ditutup.
+ *    Ini disengaja: localStorage tidak aman untuk token (XSS risk).
+ *    Server yang menyimpan refresh token di httpOnly cookie — tidak bisa dibaca JS.
  *
  * Cara pakai:
  * 1. Copy file ini ke src/stores/auth.store.js di project kamu
- * 2. Ganti implementasi login() dengan API call yang sebenarnya
- * 3. Import dan pakai dengan selector
+ * 2. Sesuaikan endpoint URL kalau berbeda dari /api/auth/*
+ * 3. Panggil refreshToken() di root component saat app pertama kali mount
  *
  * @example
+ * // Di root component — restore session saat app load:
+ * const refreshToken = useAuthStore((state) => state.refreshToken);
+ * useEffect(() => { refreshToken(); }, []);
+ *
+ * // Di komponen lain:
  * const user = useAuthStore((state) => state.user);
+ * const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  * const login = useAuthStore((state) => state.login);
  */
 
-import { createPersistentStore } from 'store-boilerplate';
-import { createAsyncAction } from 'store-boilerplate';
-import { clearSensitiveData, resetAllStores } from 'store-boilerplate';
+import { createStore, createAsyncAction, clearSensitiveData, sanitizeObject } from 'store-boilerplate';
 
-const useAuthStore = createPersistentStore('auth', {
+const useAuthStore = createStore('auth', {
   state: {
-    user: null,           // object | null — boleh persist (nama, email, role)
-    token: null,          // string | null — MEMORY ONLY, tidak masuk persistFields
+    user: null,            // object | null — data user (nama, email, role) — memory only
+    accessToken: null,     // string | null — MEMORY ONLY, hilang saat tab/browser ditutup
     isAuthenticated: false,
   },
 
-  // ✅ token sengaja tidak ada di sini
-  persistFields: ['user', 'isAuthenticated'],
-
-  version: 1,
-
   actions: (set) => ({
     /**
-     * Login — ganti body fetchToken() dengan API call project kamu.
-     * createAsyncAction otomatis handle loading/error state.
+     * Login dengan email dan password.
+     * accessToken disimpan di memory. refreshToken disimpan di httpOnly cookie oleh server.
      */
     login: createAsyncAction(set, async (email, password) => {
-      // Ganti ini dengan API call yang sebenarnya:
-      // const { user, token } = await api.login(email, password);
-      const { user, token } = await fetchToken(email, password);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include', // kirim & terima httpOnly cookie
+      });
 
-      set({ user, token, isAuthenticated: true });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Login failed');
+      }
+
+      const { data } = await res.json();
+      set({
+        user: sanitizeObject(data.user), // strip __proto__ sebelum masuk state
+        accessToken: data.accessToken,
+        isAuthenticated: true,
+      });
     }),
 
-    logout: () => {
-      // Hapus semua sensitive data + reset semua store sekaligus
-      clearSensitiveData();
-      resetAllStores();
-    },
+    /**
+     * Restore session saat app load / page refresh.
+     * Server membaca refresh token dari httpOnly cookie — tidak ada yang dikirim eksplisit.
+     * Jika cookie expired atau tidak ada → paksa logout (isAuthenticated: false).
+     *
+     * Catatan: endpoint ini hanya mengembalikan accessToken baru.
+     * Kalau kamu butuh data user (nama, role), fetch /api/auth/me setelah ini.
+     */
+    refreshToken: createAsyncAction(set, async () => {
+      const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include', // kirim httpOnly cookie otomatis
+      });
 
-    setUser: (user) => set({ user }),
+      if (!res.ok) {
+        // Cookie expired atau tidak valid → bersihkan state lokal
+        set({ user: null, accessToken: null, isAuthenticated: false });
+        return;
+      }
 
-    // Update token di memory saja — tidak akan sampai ke localStorage
-    refreshToken: (newToken) => set({ token: newToken }),
+      const { data } = await res.json();
+      set({ accessToken: data.accessToken, isAuthenticated: true });
+    }),
+
+    /**
+     * Logout — invalidasi session di server, lalu bersihkan semua state lokal.
+     * clearSensitiveData() dipanggil di finally → state selalu bersih
+     * meskipun API call gagal (network error, server down).
+     */
+    logout: createAsyncAction(set, async () => {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+        });
+      } finally {
+        // Selalu bersihkan state lokal — bahkan kalau server tidak merespons
+        clearSensitiveData();
+        set({ user: null, accessToken: null, isAuthenticated: false });
+      }
+    }),
+
+    /**
+     * Update data user di memory (mis. setelah edit profil).
+     * Tidak ada yang ditulis ke storage.
+     */
+    setUser: (user) => set({ user: sanitizeObject(user) }),
   }),
 });
 
 export default useAuthStore;
-
-// ---------------------------------------------------------------------------
-// Placeholder — hapus dan ganti dengan HTTP client project kamu
-// ---------------------------------------------------------------------------
-async function fetchToken(email, password) {
-  throw new Error(
-    'Ganti fetchToken() di auth.store.js dengan API call yang sebenarnya.'
-  );
-}

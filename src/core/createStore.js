@@ -15,7 +15,7 @@ const isDev = () =>
  * Factory utama untuk membuat store.
  * Setiap store otomatis punya: loading, error, setLoading, setError, reset.
  *
- * Dibangun di atas custom engine (useSyncExternalStore) — tidak bergantung Zustand.
+ * Dibangun di atas custom engine (useSyncExternalStore) — zero external dependency.
  *
  * @param {string} name - nama store (dipakai devtools + registry)
  * @param {object} options
@@ -46,6 +46,8 @@ export function createStore(name, options = {}) {
     actions: actionsFn = () => ({}),
     persist = false,
     persistFields = [],
+    version = 1,
+    migrate = null,
     devtools: enableDevtools = true,
     maskFields = [],
     useImmer = false,
@@ -57,6 +59,8 @@ export function createStore(name, options = {}) {
       state: initialState,
       actions: actionsFn,
       persistFields,
+      version,
+      migrate,
       devtools: enableDevtools,
       maskFields,
       useImmer,
@@ -96,7 +100,7 @@ export function createStore(name, options = {}) {
     clearStorage: () => {},
   });
 
-  // Buat hook — mirip Zustand API: useStore() atau useStore(selector)
+  // Buat hook — useStore() atau useStore(selector)
   const hook = (selector) => useVanillaStore(store, selector);
   hook.getState = store.getState;
   hook.setState = setState;

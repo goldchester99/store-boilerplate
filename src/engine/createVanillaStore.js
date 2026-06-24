@@ -33,7 +33,7 @@ export function createVanillaStore(initialState = {}) {
     if (partialNext === null || partialNext === undefined) return;
 
     // SHALLOW MERGE — baik bentuk function maupun object selalu di-merge ke
-    // state lama (semantik Zustand). Tanpa ini, action yang pakai set(fn)
+    // state lama. Tanpa ini, action yang pakai set(fn)
     // akan menghapus action & key lain dari state.
     const nextState = { ...state, ...partialNext };
 

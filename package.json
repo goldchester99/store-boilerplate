@@ -1,7 +1,7 @@
 {
   "name": "store-boilerplate",
-  "version": "1.0.0",
-  "description": "Custom state management library for goldchester99 ecosystem — built on useSyncExternalStore, zero external dependency",
+  "version": "1.0.1",
+  "description": "Custom state management library built on useSyncExternalStore — zero external dependency",
   "type": "module",
   "main": "./src/index.js",
   "exports": {

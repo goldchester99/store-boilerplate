@@ -1,5 +1,4 @@
 import { clearSensitiveData } from '../security/clearSensitiveData.js';
-import { resetAllStores } from '../security/resetAllStores.js';
 import { STORAGE_PREFIX } from '../core/createPersistentStore.js';
 
 /**
@@ -48,8 +47,7 @@ export function initCrossTabSync(options = {}) {
 
     // newValue === null artinya key dihapus = logout di tab lain (SR-F-23)
     if (event.newValue === null && authKeys.has(event.key)) {
-      clearSensitiveData();
-      resetAllStores();
+      clearSensitiveData(); // internally calls resetAllStores()
     }
   };
 

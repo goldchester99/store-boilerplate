@@ -1,6 +1,6 @@
 # store-boilerplate
 
-Custom state management library untuk ekosistem goldchester99. Dibangun di atas `useSyncExternalStore` React 18 — **zero external dependency**. Setup store baru dalam hitungan menit: loading state, error handling, persist, security, dan cross-tab sync sudah built-in.
+Custom state management library yang dibangun di atas `useSyncExternalStore` React 18 — **zero external dependency**. Setup store baru dalam hitungan menit: loading state, error handling, persist, security, dan cross-tab sync sudah built-in.
 
 ---
 
@@ -29,25 +29,17 @@ Custom state management library untuk ekosistem goldchester99. Dibangun di atas 
 
 Tanpa store-boilerplate, tiap project nulis ulang hal yang sama: loading state, error handling, persist pattern, token security. store-boilerplate hadir sebagai satu tempat — update sekali, berlaku di semua project.
 
-```
-goldchester99/store-boilerplate  ← kamu di sini
-goldchester99/falcon-cms         ← pakai ini
-goldchester99/owl-erp            ← pakai ini
-goldchester99/eagle-trade        ← pakai ini
-goldchester99/leopard-ea         ← pakai ini
-```
-
 **Peer dependencies:** React >= 18 only
 **Optional:** immer >= 10
-**Zero external state management dependency** — tidak butuh Zustand, Redux, atau library lain
+**Zero external state management dependency** — tidak butuh library state management eksternal
 
 ---
 
 ## Install
 
 ```bash
-# Di project kamu (falcon-cms, owl-erp, dll):
-npm install github:goldchester99/store-boilerplate
+# Di project kamu:
+npm install github:your-org/store-boilerplate
 npm install react
 ```
 
@@ -172,6 +164,8 @@ createStore(name, options)
 | `actions` | `(set, get) => object` | `() => ({})` | Action definitions |
 | `persist` | `boolean` | `false` | Aktifkan localStorage sync |
 | `persistFields` | `string[]` | `[]` | Field yang boleh disimpan (wajib kalau `persist: true`) |
+| `version` | `number` | `1` | Versi schema untuk migration (hanya berlaku kalau `persist: true`) |
+| `migrate` | `function` | `null` | `(oldState, oldVersion) => newState` (hanya berlaku kalau `persist: true`) |
 | `devtools` | `boolean` | `true` | Redux DevTools (dev only) |
 | `maskFields` | `string[]` | `[]` | Field tambahan yang di-mask di DevTools |
 | `useImmer` | `boolean` | `false` | Aktifkan immer middleware |
@@ -301,16 +295,16 @@ return <App />;
 Token JWT **tidak boleh masuk localStorage**. Simpan di memory saja, jangan masukkan ke `persistFields`.
 
 ```js
-// ✅ Benar
-createPersistentStore('auth', {
-  state: { user: null, token: null },
-  persistFields: ['user'],  // token tidak ada di sini
+// ✅ Benar — pakai createStore biasa, tidak ada yang ke localStorage
+createStore('auth', {
+  state: { user: null, accessToken: null, isAuthenticated: false },
+  // Session di-restore via refreshToken() + httpOnly cookie
 });
 
 // ❌ Salah — store-boilerplate akan throw warning
 createPersistentStore('auth', {
-  state: { token: null },
-  persistFields: ['token'], // ← warning otomatis muncul
+  state: { accessToken: null },
+  persistFields: ['accessToken'], // ← warning otomatis muncul
 });
 ```
 
@@ -373,8 +367,8 @@ node_modules/store-boilerplate/templates/notification.store.js
 
 ### auth.store.js
 
-State: `user` (persist), `token` (memory only, **tidak** di persistFields), `isAuthenticated` (persist)
-Actions: `login`, `logout`, `setUser`, `refreshToken`
+State: `user`, `accessToken`, `isAuthenticated` — semuanya **memory only**, tidak ada yang di-persist ke localStorage. Session di-restore via `refreshToken()` yang membaca httpOnly cookie.
+Actions: `login`, `logout`, `refreshToken`, `setUser`
 
 ### ui.store.js
 
@@ -412,8 +406,8 @@ Log setiap perubahan state di console. Field sensitif tampil sebagai `[FILTERED]
 
 ```
 [store-boilerplate] auth
-  prev  { user: null, token: [FILTERED], loading: false }
-  next  { user: { name: 'Alice' }, token: [FILTERED], loading: false }
+  prev  { user: null, accessToken: [FILTERED], loading: false }
+  next  { user: { name: 'Alice' }, accessToken: [FILTERED], loading: false }
 ```
 
 ### immer (opsional)
