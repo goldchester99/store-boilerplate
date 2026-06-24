@@ -1,0 +1,33 @@
+{
+  "name": "store-boilerplate",
+  "version": "1.0.0",
+  "description": "Custom state management library for goldchester99 ecosystem — built on useSyncExternalStore, zero external dependency",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./templates/*": "./templates/*"
+  },
+  "scripts": {
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesOptional": {
+    "immer": ">=10.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "jsdom": "^24.0.0",
+    "@testing-library/react": "^14.0.0",
+    "eslint": "^8.0.0",
+    "react": "^18.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
